@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -85,5 +86,10 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return this.userRepository.findAll();
+    }
+
+    public User getById(UUID id) {
+        return this.userRepository.findById(id).orElseThrow(() ->
+                new DomainException("User with id [%s] does not exist.".formatted(id)));
     }
 }

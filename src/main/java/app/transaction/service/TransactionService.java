@@ -5,13 +5,13 @@ import app.transaction.model.TransactionStatus;
 import app.transaction.model.TransactionType;
 import app.transaction.repository.TransactionRepository;
 import app.user.model.User;
-import app.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Currency;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -42,5 +42,9 @@ public class TransactionService {
 
         this.transactionRepository.save(transaction);
         return transaction;
+    }
+
+    public List<Transaction> getAllByOwnerId(UUID ownerId) {
+        return this.transactionRepository.findAllByOwnerIdOrderByCreatedOnDesc(ownerId);
     }
 }

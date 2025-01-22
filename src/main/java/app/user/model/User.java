@@ -4,7 +4,6 @@ import app.subscription.model.Subscription;
 import app.wallet.model.Wallet;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +50,10 @@ public class User {
     private LocalDateTime updatedOn;
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER)
+    @OrderBy("createdOn DESC")
     private List<Subscription> subscriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER)
+    @OrderBy("createdOn ASC")
     private List<Wallet> wallets = new ArrayList<>();
 }

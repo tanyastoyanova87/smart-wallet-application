@@ -1,4 +1,4 @@
-package app.user.web.dto;
+package app.web.dto;
 
 import jakarta.validation.constraints.Size;
 import lombok.Data;

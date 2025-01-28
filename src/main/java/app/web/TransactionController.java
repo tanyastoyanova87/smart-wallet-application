@@ -1,4 +1,4 @@
-package app.user.web;
+package app.web;
 
 import app.transaction.model.Transaction;
 import app.transaction.service.TransactionService;

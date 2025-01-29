@@ -75,7 +75,7 @@ public class UserService {
     private User initializeUser(RegisterRequest registerRequest) {
         return User.builder()
                 .username(registerRequest.getUsername())
-                .password(passwordEncoder.encode(registerRequest.getUsername()))
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .role(UserRole.USER)
                 .isActive(true)
                 .country(registerRequest.getCountry())

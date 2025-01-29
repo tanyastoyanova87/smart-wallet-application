@@ -2,6 +2,7 @@ package app.web;
 
 import app.user.model.User;
 import app.user.service.UserService;
+import app.web.dto.LoginRequest;
 import app.web.dto.RegisterRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,22 @@ public class IndexController {
     }
 
     @GetMapping("/login")
-    public String getLoginPage() {
-        return "login";
+    public ModelAndView getLoginPage() {
+        ModelAndView modelAndView = new ModelAndView();
+
+        modelAndView.setViewName("login");
+        modelAndView.addObject("loginRequest", new LoginRequest());
+        return modelAndView;
+    }
+
+    @PostMapping("/login")
+    public String loginUser(@Valid LoginRequest loginRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "login";
+        }
+
+        this.userService.login(loginRequest);
+        return "redirect:/home";
     }
 
     @GetMapping("/register")
@@ -43,21 +58,21 @@ public class IndexController {
     }
 
     @PostMapping("/register")
-    public ModelAndView registerNewUser(@Valid RegisterRequest registerRequest, BindingResult bindingResult) {
+    public String registerNewUser(@Valid RegisterRequest registerRequest, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
-            return new ModelAndView("register");
+            return "register";
         }
 
        this.userService.register(registerRequest);
-        return new ModelAndView("redirect:/home");
+        return "redirect:/home";
     }
 
     @GetMapping("/home")
     public ModelAndView getHomePage() {
         ModelAndView modelAndView = new ModelAndView();
 
-        User user = this.userService.getById(UUID.fromString("befef489-6cc5-48d1-bcf1-8cabfe9b1604"));
+        User user = this.userService.getById(UUID.fromString("d576efa6-5ca8-44c8-b5d5-677c8f5abd7a"));
         modelAndView.setViewName("home");
         modelAndView.addObject("user", user);
 

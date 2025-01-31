@@ -9,6 +9,7 @@ import app.user.model.User;
 import app.wallet.model.Wallet;
 import app.wallet.model.WalletStatus;
 import app.wallet.repository.WalletRepository;
+import app.web.dto.TransferRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,103 @@ public class WalletService {
                          TransactionService transactionService) {
         this.walletRepository = walletRepository;
         this.transactionService = transactionService;
+    }
+
+    public Transaction transferFunds(User sender, TransferRequest transferRequest) {
+        Wallet senderWallet = getWalletById(transferRequest.getFromWalletId());
+
+        Optional<Wallet> optionalWallet = this.walletRepository
+                .findAllWalletsByOwnerUsername(transferRequest.getUsernameReceiver())
+                .stream().filter(wallet -> wallet.getStatus() == WalletStatus.ACTIVE)
+                .findFirst();
+
+        String description = "Transfer from %s to %s, for %.2f EUR."
+                .formatted(sender.getUsername(), transferRequest.getUsernameReceiver(), transferRequest.getAmount());
+
+        if (optionalWallet.isEmpty()) {
+            return transactionService.createNewTransaction(sender,
+                    senderWallet.getId().toString(),
+                    transferRequest.getUsernameReceiver(),
+                    transferRequest.getAmount(),
+                    senderWallet.getBalance(),
+                    senderWallet.getCurrency(),
+                    TransactionType.WITHDRAWAL,
+                    TransactionStatus.FAILED,
+                    description,
+                    "Invalid criteria for transfer");
+        }
+
+        Transaction withdrawal = charge(sender, senderWallet.getId(), transferRequest.getAmount(), description);
+
+        if (withdrawal.getStatus() == TransactionStatus.FAILED) {
+            return withdrawal;
+        }
+
+        Wallet receiverWallet = optionalWallet.get();
+        receiverWallet.setBalance(receiverWallet.getBalance().add(transferRequest.getAmount()));
+        receiverWallet.setUpdatedOn(LocalDateTime.now());
+
+        this.walletRepository.save(receiverWallet);
+
+        return transactionService.createNewTransaction(receiverWallet.getOwner(),
+                senderWallet.getId().toString(),
+                receiverWallet.getId().toString(),
+                transferRequest.getAmount(),
+                receiverWallet.getBalance(),
+                receiverWallet.getCurrency(),
+                TransactionType.DEPOSIT,
+                TransactionStatus.SUCCEEDED,
+                description,
+                null);
+    }
+
+    @Transactional
+    public Transaction charge(User user, UUID walletId, BigDecimal amount, String description) {
+        Wallet wallet = getWalletById(walletId);
+
+        String failureReason = null;
+        boolean transactionFailed = false;
+        if (wallet.getStatus() == WalletStatus.INACTIVE) {
+            failureReason = "This wallet is inactive";
+            transactionFailed = true;
+        }
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            failureReason = "Insufficient funds";
+            transactionFailed = true;
+        }
+
+        if (transactionFailed) {
+            return this.transactionService.createNewTransaction(
+                    user,
+                    wallet.getId().toString(),
+                    SMART_WALLET_LTD,
+                    amount,
+                    wallet.getBalance(),
+                    wallet.getCurrency(),
+                    TransactionType.WITHDRAWAL,
+                    TransactionStatus.FAILED,
+                    description,
+                    failureReason
+            );
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        wallet.setUpdatedOn(LocalDateTime.now());
+        this.walletRepository.save(wallet);
+
+        return this.transactionService.createNewTransaction(
+                user,
+                wallet.getId().toString(),
+                SMART_WALLET_LTD,
+                amount,
+                wallet.getBalance(),
+                wallet.getCurrency(),
+                TransactionType.WITHDRAWAL,
+                TransactionStatus.SUCCEEDED,
+                description,
+                null
+        );
     }
 
     @Transactional
@@ -94,5 +192,10 @@ public class WalletService {
                 .createdOn(LocalDateTime.now())
                 .updatedOn(LocalDateTime.now())
                 .build();
+    }
+
+    private Wallet getWalletById(UUID walletId) {
+        return this.walletRepository.findById(walletId).orElseThrow(() ->
+                new DomainException("Wallet with id [%s] does not exist.".formatted(walletId)));
     }
 }

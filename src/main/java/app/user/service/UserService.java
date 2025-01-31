@@ -5,6 +5,7 @@ import app.subscription.service.SubscriptionService;
 import app.user.model.User;
 import app.user.model.UserRole;
 import app.user.repository.UserRepository;
+import app.web.dto.EditRequest;
 import app.web.dto.LoginRequest;
 import app.web.dto.RegisterRequest;
 import app.wallet.service.WalletService;
@@ -70,6 +71,17 @@ public class UserService {
                 .formatted(user.getUsername(), user.getId()));
 
         return user;
+    }
+
+    public void editProfile(UUID id, EditRequest editRequest) {
+        User user = getById(id);
+
+        user.setFirstName(editRequest.getFirstName());
+        user.setLastName(editRequest.getLastName());
+        user.setEmail(editRequest.getEmail());
+        user.setProfilePicture(editRequest.getProfilePicture());
+
+        this.userRepository.save(user);
     }
 
     private User initializeUser(RegisterRequest registerRequest) {

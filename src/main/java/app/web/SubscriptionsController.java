@@ -28,7 +28,7 @@ public class SubscriptionsController {
 
     @GetMapping("/history")
     public ModelAndView getSubscriptionsPage() {
-        User user = this.userService.getById(UUID.fromString("53486350-e1f3-4a93-94d7-43bf4135be41"));
+        User user = this.userService.getById(UUID.fromString("d3cf156a-b59e-4ace-9f47-bf694a61dcd7"));
 
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("subscription-history");

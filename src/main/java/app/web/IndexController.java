@@ -72,7 +72,7 @@ public class IndexController {
     public ModelAndView getHomePage() {
         ModelAndView modelAndView = new ModelAndView();
 
-        User user = this.userService.getById(UUID.fromString("d576efa6-5ca8-44c8-b5d5-677c8f5abd7a"));
+        User user = this.userService.getById(UUID.fromString("d3cf156a-b59e-4ace-9f47-bf694a61dcd7"));
         modelAndView.setViewName("home");
         modelAndView.addObject("user", user);
 

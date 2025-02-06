@@ -1,5 +1,6 @@
 package app.web;
 
+import app.security.RequireAdminRole;
 import app.user.model.User;
 import app.user.service.UserService;
 import app.web.dto.EditRequest;
@@ -57,6 +58,7 @@ public class UserController {
         return new ModelAndView("redirect:/home");
     }
 
+    @RequireAdminRole
     @GetMapping
     public ModelAndView getUsersPage() {
         List<User> allUsers = this.userService.getAllUsers();
@@ -66,5 +68,19 @@ public class UserController {
         modelAndView.addObject("users", allUsers);
 
         return modelAndView;
+    }
+
+    @PutMapping("/{id}/status")
+    public String switchUserStatus(@PathVariable UUID id) {
+        this.userService.switchStatus(id);
+
+        return "redirect:/users";
+    }
+
+    @PutMapping("/{id}/role")
+    public String switchUserRole(@PathVariable UUID id) {
+        this.userService.switchRole(id);
+
+        return "redirect:/users";
     }
 }

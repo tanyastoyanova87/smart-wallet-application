@@ -104,4 +104,23 @@ public class UserService {
         return this.userRepository.findById(id).orElseThrow(() ->
                 new DomainException("User with id [%s] does not exist.".formatted(id)));
     }
+
+    public void switchStatus(UUID id) {
+        User user = getById(id);
+
+        user.setActive(!user.isActive());
+        this.userRepository.save(user);
+    }
+
+    public void switchRole(UUID id) {
+        User user = getById(id);
+
+        if (user.getRole() == UserRole.USER) {
+            user.setRole(UserRole.ADMIN);
+        } else {
+            user.setRole(UserRole.USER);
+        }
+
+        this.userRepository.save(user);
+    }
 }

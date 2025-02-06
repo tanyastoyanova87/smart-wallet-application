@@ -1,13 +1,19 @@
 package app.web;
 
+import app.subscription.model.SubscriptionType;
+import app.subscription.service.SubscriptionService;
+import app.transaction.model.Transaction;
 import app.user.model.User;
 import app.user.service.UserService;
+import app.web.dto.UpgradeRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-
 import java.util.UUID;
 
 @Controller
@@ -15,20 +21,41 @@ import java.util.UUID;
 public class SubscriptionsController {
 
     private final UserService userService;
+    private final SubscriptionService subscriptionService;
 
     @Autowired
-    public SubscriptionsController(UserService userService) {
+    public SubscriptionsController(UserService userService, SubscriptionService subscriptionService) {
         this.userService = userService;
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping
-    public String getUpgradePage() {
-        return "upgrade";
+    public ModelAndView getUpgradePage(HttpSession session) {
+        UUID userId = (UUID) session.getAttribute("user_id");
+        User user = this.userService.getById(userId);
+
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("upgrade");
+        modelAndView.addObject("user", user);
+        modelAndView.addObject("upgradeRequest", UpgradeRequest.builder().build());
+
+        return modelAndView;
+    }
+
+    @PostMapping
+    public String upgrade(@RequestParam("subscription-type") SubscriptionType subscriptionType, UpgradeRequest upgradeRequest, HttpSession session) {
+        UUID userId = (UUID) session.getAttribute("user_id");
+        User user = this.userService.getById(userId);
+
+        Transaction upgrade = this.subscriptionService.upgrade(user, upgradeRequest, subscriptionType);
+
+        return "redirect:/transactions/" + upgrade.getId();
     }
 
     @GetMapping("/history")
-    public ModelAndView getSubscriptionsPage() {
-        User user = this.userService.getById(UUID.fromString("d3cf156a-b59e-4ace-9f47-bf694a61dcd7"));
+    public ModelAndView getSubscriptionsPage(HttpSession session) {
+        UUID userId = (UUID) session.getAttribute("user_id");
+        User user = this.userService.getById(userId);
 
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("subscription-history");

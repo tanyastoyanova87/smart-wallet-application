@@ -112,16 +112,16 @@
         </thead>
         <tbody>
 
-        <tr>
-          <td>0afa0750-1e2a-43fa-8c93-092fda6e3a80</td>
-          <td>
-            <p class="status active">SUCCEEDED</p>
-          </td>
-          <td>-2.04 EUR</td>
-          <td>16.03 EUR</td>
-          <td style="text-align: left">2.00 EUR from ivan123</td>
-          <td>30 Dec 2024 17:03</td>
-        </tr>
+<!--        <tr>-->
+<!--          <td>0afa0750-1e2a-43fa-8c93-092fda6e3a80</td>-->
+<!--          <td>-->
+<!--            <p class="status active">SUCCEEDED</p>-->
+<!--          </td>-->
+<!--          <td>-2.04 EUR</td>-->
+<!--          <td>16.03 EUR</td>-->
+<!--          <td style="text-align: left">2.00 EUR from ivan123</td>-->
+<!--          <td>30 Dec 2024 17:03</td>-->
+<!--        </tr>-->
         <tr th:each="transaction : ${transactions}">
           <td th:text="${transaction.id}"></td>
           <td>

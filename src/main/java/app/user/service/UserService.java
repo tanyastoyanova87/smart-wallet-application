@@ -1,16 +1,19 @@
 package app.user.service;
 
 import app.exception.DomainException;
+import app.security.AuthenticationMetaData;
 import app.subscription.service.SubscriptionService;
 import app.user.model.User;
 import app.user.model.UserRole;
 import app.user.repository.UserRepository;
 import app.web.dto.EditRequest;
-import app.web.dto.LoginRequest;
 import app.web.dto.RegisterRequest;
 import app.wallet.service.WalletService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +25,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SubscriptionService subscriptionService;
@@ -37,21 +40,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.subscriptionService = service;
         this.walletService = walletService;
-    }
-
-    public User login(LoginRequest loginRequest) {
-        Optional<User> optionalUser = this.userRepository.findByUsername(loginRequest.getUsername());
-        if (optionalUser.isEmpty()) {
-            throw new DomainException("Username or password is incorrect");
-        }
-
-        User user = optionalUser.get();
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new DomainException("Username or password is incorrect");
-        }
-
-        log.info("[%s] logged in".formatted(user.getUsername()));
-        return user;
     }
 
     @Transactional
@@ -122,5 +110,13 @@ public class UserService {
         }
 
         this.userRepository.save(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = this.userRepository.findByUsername(username).orElseThrow(() -> new DomainException("User with this username does not exist."));
+
+        return new AuthenticationMetaData(user.getId(), user.getUsername(), user.getPassword(),
+                user.getRole(), user.isActive());
     }
 }

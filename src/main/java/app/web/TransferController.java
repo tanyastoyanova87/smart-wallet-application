@@ -1,5 +1,6 @@
 package app.web;
 
+import app.security.AuthenticationMetaData;
 import app.transaction.model.Transaction;
 import app.user.model.User;
 import app.user.service.UserService;
@@ -8,6 +9,7 @@ import app.web.dto.TransferRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,9 +33,8 @@ public class TransferController {
     }
 
     @GetMapping
-    public ModelAndView getTransfersPage(HttpSession session) {
-        UUID userId = (UUID) session.getAttribute("user_id");
-        User user = this.userService.getById(userId);
+    public ModelAndView getTransfersPage(@AuthenticationPrincipal AuthenticationMetaData authenticationMetaData) {
+        User user = this.userService.getById(authenticationMetaData.getId());
 
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("transfer");

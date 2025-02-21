@@ -1,12 +1,12 @@
 package app.web;
 
-import app.security.RequireAdminRole;
 import app.user.model.User;
 import app.user.service.UserService;
 import app.web.dto.EditRequest;
 import app.web.mapper.DtoMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,8 +58,8 @@ public class UserController {
         return new ModelAndView("redirect:/home");
     }
 
-    @RequireAdminRole
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ModelAndView getUsersPage() {
         List<User> allUsers = this.userService.getAllUsers();
 

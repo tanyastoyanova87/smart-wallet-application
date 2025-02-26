@@ -6,6 +6,7 @@ import app.transaction.model.TransactionStatus;
 import app.transaction.model.TransactionType;
 import app.transaction.repository.TransactionRepository;
 import app.user.model.User;
+import app.wallet.model.Wallet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,5 +53,15 @@ public class TransactionService {
     public Transaction getById(UUID id) {
         return this.transactionRepository.findById(id).orElseThrow(() -> new DomainException(
                 "Transaction with [%s] does not exist.".formatted(id)));
+    }
+
+    public List<Transaction> getLastFourTransactionsByWallet(Wallet wallet) {
+        return this.transactionRepository
+                .findAllBySenderOrReceiverOrderByCreatedOnDesc(wallet.getId().toString(), wallet.getId().toString())
+                .stream()
+                .filter(t -> t.getOwner().getId() == wallet.getOwner().getId())
+                .filter(t -> t.getStatus() == TransactionStatus.SUCCEEDED)
+                .limit(4)
+                .toList();
     }
 }

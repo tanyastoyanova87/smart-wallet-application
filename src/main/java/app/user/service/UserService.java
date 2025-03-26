@@ -1,6 +1,7 @@
 package app.user.service;
 
 import app.exception.DomainException;
+import app.notification.service.NotificationService;
 import app.security.AuthenticationMetaData;
 import app.subscription.service.SubscriptionService;
 import app.user.model.User;
@@ -30,16 +31,18 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final SubscriptionService subscriptionService;
     private final WalletService walletService;
+    private final NotificationService notificationService;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        SubscriptionService service,
-                       WalletService walletService) {
+                       WalletService walletService, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.subscriptionService = service;
         this.walletService = walletService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -55,19 +58,33 @@ public class UserService implements UserDetailsService {
 
         this.subscriptionService.createDefaultSubscription(user);
         this.walletService.createDefaultWallet(user);
+
+        notificationService.saveNotificationPreference(user.getId(), false, null);
+
         log.info("Successfully created new user account for username [%s] and [%s]."
                 .formatted(user.getUsername(), user.getId()));
 
         return user;
     }
 
-    public void editProfile(UUID id, EditRequest editRequest) {
-        User user = getById(id);
+    public void editProfile(UUID userId, EditRequest editRequest) {
+        User user = getById(userId);
 
         user.setFirstName(editRequest.getFirstName());
         user.setLastName(editRequest.getLastName());
         user.setEmail(editRequest.getEmail());
         user.setProfilePicture(editRequest.getProfilePicture());
+
+        String email = user.getEmail();
+        if (email.isEmpty()) {
+            user.setEmail(null);
+        }
+
+        if (!editRequest.getEmail().isBlank()) {
+            notificationService.saveNotificationPreference(userId, true, editRequest.getEmail());
+        } else {
+            notificationService.saveNotificationPreference(userId, false, null);
+        }
 
         this.userRepository.save(user);
     }
